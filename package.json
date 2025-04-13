@@ -1,0 +1,14 @@
+{
+    "name": "teralang",
+    "version": "1.0.1",
+    "description": "A lightweight mock API server and domain-specific language for creating mock backends using .tera files",
+    "main": "lib/server.js",
+    "bin": {
+        "teralang": "bin/teralang.js"
+    },
+    "type": "module",
+    "dependencies": {
+        "chalk": "^5.4.1",
+        "mime-types": "^2.1.35"
+    }
+}
