@@ -1,0 +1,8 @@
+// import "./hello-world.tera"
+
+route "/ping" GET: {
+  status: 204 // optional
+  json: {
+    message: "pong"
+  }
+}
