@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/json"
+	"flag"
 	"fmt"
 
 	"github.com/tera-language/teralang/internal/logger"
@@ -9,13 +9,29 @@ import (
 )
 
 func main() {
-	program, err := parser.Parse("./testdata/test.tera")
+	help := false
+	flag.BoolVar(&help, "help", false, "Display this help message and exit.")
+	flag.BoolVar(&help, "h", false, "Display this help message and exit.")
+
+	flag.Parse()
+
+	if help {
+		fmt.Print(`
+USAGE: teralang <path>
+
+ARGUMENTS:
+  <path>        The path to the entrypoint .tera file.
+
+OPTIONS:
+  --help, -h    Display this help message and exit.
+`)
+		return
+	}
+
+	entrypoint := flag.Arg(0)
+	program, err := parser.Parse(entrypoint)
 	if err != nil {
 		logger.Error(err)
 	}
-	prettyJson, err := json.MarshalIndent(program, "", "  ")
-	if err != nil {
-		logger.Error(err)
-	}
-	fmt.Printf("%s\n", string(prettyJson))
+	fmt.Printf("%#v\n", program)
 }
