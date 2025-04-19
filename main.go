@@ -16,17 +16,22 @@ func main() {
 	flag.BoolVar(&help, "help", false, "Display this help message and exit.")
 	flag.BoolVar(&help, "h", false, "Display this help message and exit.")
 
+	port := 3000
+	flag.IntVar(&port, "port", 3000, "Set the port number.")
+	flag.IntVar(&port, "p", 3000, "Set the port number.")
+
 	flag.Parse()
 
 	if help {
 		fmt.Print(`
-USAGE: teralang <path>
+USAGE: teralang <path> [-p <port>]
 
 ARGUMENTS:
-  <path>        The path to the entrypoint .tera file.
+  <path>               The path to the entrypoint .tera file.
 
 OPTIONS:
-  --help, -h    Display this help message and exit.
+  --port, -p <port>    Set the port number.
+  --help, -h           Display this help message and exit.
 `)
 		return
 	}
@@ -41,8 +46,8 @@ OPTIONS:
 	logger.Successln("Parsing done!")
 
 	mux := server.Server(program)
-	logger.Successln("Server started at http://localhost:3000")
-	err = http.ListenAndServe(":3000", mux)
+	logger.Successf("Server started at http://localhost:%d\n", port)
+	err = http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
 	if err != nil {
 		logger.Errorln(err)
 		os.Exit(1)
