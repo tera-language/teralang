@@ -7,6 +7,7 @@ permissions:
 
 jobs:
   build:
+    concurrency: build
     strategy:
       fail-fast: false
       matrix:
@@ -17,9 +18,6 @@ jobs:
           - os: ubuntu-latest
             goos: linux
             goarch: amd64
-          - os: windows-latest
-            goos: windows
-            goarch: amd64
     runs-on: ${{ matrix.versions.os }}
     name: ${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}
     steps:
@@ -27,14 +25,40 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - uses: tree-sitter/setup-action@v2
-        with:
-          install-lib: false
-      - run: GOOS=${{ matrix.versions.goos }} GOARCH=${{ matrix.versions.goarch }} make
-      - run: mv qcsim qcsim-${{ github.ref_name }}-${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}
+      - run: GOOS=${{ matrix.versions.goos }} GOARCH=${{ matrix.versions.goarch }} go build
+        shell: bash
+      - run: mv teralang teralang-${{ github.ref_name }}-${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}
+        if: ${{ matrix.versions.os != 'windows-latest' }}
+      - run: mv teralang.exe teralang-${{ github.ref_name }}-${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}.exe
+        shell: bash
+        if: ${{ matrix.versions.os == 'windows-latest' }}
       - uses: actions/upload-artifact@v4
         with:
-          path: qcsim-${{ github.ref_name }}-${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}
+          path: teralang-${{ github.ref_name }}-${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}
+        if: ${{ matrix.versions.os != 'windows-latest' }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: teralang-${{ github.ref_name }}-${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}.exe
+        if: ${{ matrix.versions.os == 'windows-latest' }}
       # - uses: softprops/action-gh-release@v2
       #   with:
-      #     files: qcsim-${{ github.ref_name }}-${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}
+      #     files: teralang-${{ github.ref_name }}-${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}
+  build-windows:
+    concurrency: build
+    runs-on: windows-latest
+    name: windows-amd64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: GOOS=windows GOARCH=amd64 go build
+        shell: bash
+      - run: mv teralang.exe teralang-${{ github.ref_name }}-windows-amd64.exe
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        with:
+          path: teralang-${{ github.ref_name }}-windows-amd64.exe
+      # - uses: softprops/action-gh-release@v2
+      #   with:
+      #     files: teralang-${{ github.ref_name }}-windows-amd64.exe
