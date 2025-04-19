@@ -35,9 +35,15 @@ jobs:
         shell: bash
         if: ${{ matrix.versions.os == 'windows-latest' }}
       - uses: actions/upload-artifact@v4
+        if: ${{ matrix.versions.os != 'windows-latest' }}
         with:
           name: teralang-${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}
-          path: teralang-${{ github.ref_name }}-${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}[.exe]
+          path: teralang-${{ github.ref_name }}-${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}
+      - uses: actions/upload-artifact@v4
+        if: ${{ matrix.versions.os == 'windows-latest' }}
+        with:
+          name: teralang-${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}
+          path: teralang-${{ github.ref_name }}-${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}.exe
       # - uses: softprops/action-gh-release@v2
       #   with:
-      #     files: teralang-${{ github.ref_name }}-${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}[.exe]
+      #     files: teralang-${{ github.ref_name }}-${{ matrix.versions.goos }}-${{ matrix.versions.goarch }}
