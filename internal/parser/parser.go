@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"slices"
+	"strconv"
 
 	"github.com/tera-language/teralang/internal/logger"
 	tree_sitter_teralang "github.com/tera-language/tree-sitter-teralang/bindings/go"
@@ -70,9 +71,12 @@ func parseNode(node *tree_sitter.Node, source []byte, sourcePath string, program
 			return nil, err
 		}
 
-		status := "200"
+		var status int64 = 200
 		if stat, ok := routeProps["status"]; ok {
-			status = stat.(string)
+			status, err = strconv.ParseInt(stat.(string), 10, 64)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		routeHeaders := map[string]string{}
@@ -100,7 +104,7 @@ func parseNode(node *tree_sitter.Node, source []byte, sourcePath string, program
 		route := Route{
 			Path:    routePath,
 			Method:  routeMethod,
-			Status:  status,
+			Status:  int(status),
 			Headers: routeHeaders,
 			Body:    routeBody,
 		}
