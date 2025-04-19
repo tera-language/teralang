@@ -16,6 +16,8 @@ import (
 var parsedPaths []string = []string{}
 
 func Parse(filepath string) ([]Route, error) {
+	logger.Infoln("Parsing file:", filepath)
+
 	parser := tree_sitter.NewParser()
 	lang := tree_sitter.NewLanguage(tree_sitter_teralang.Language())
 

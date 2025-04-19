@@ -29,9 +29,11 @@ OPTIONS:
 	}
 
 	entrypoint := flag.Arg(0)
+	logger.Infoln("Starting parsing...")
 	program, err := parser.Parse(entrypoint)
 	if err != nil {
 		logger.Errorln(err)
+		os.Exit(1)
 	}
-	logger.Successf("%#v\n", program)
+	logger.Successln("Parsing done!")
 }
