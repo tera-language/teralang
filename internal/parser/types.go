@@ -1,6 +1,6 @@
 package parser
 
-type route struct {
+type Route struct {
 	Path    string
 	Method  string
 	Status  string

@@ -14,7 +14,7 @@ import (
 
 var parsedPaths []string = []string{}
 
-func Parse(filepath string) ([]route, error) {
+func Parse(filepath string) ([]Route, error) {
 	parser := tree_sitter.NewParser()
 	lang := tree_sitter.NewLanguage(tree_sitter_teralang.Language())
 
@@ -34,7 +34,7 @@ func Parse(filepath string) ([]route, error) {
 	filepath = path.Clean(filepath)
 	parsedPaths = append(parsedPaths, filepath)
 
-	program := []route{}
+	program := []Route{}
 	program, err = parseNode(rootNode, text, filepath, program)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func Parse(filepath string) ([]route, error) {
 	return program, nil
 }
 
-func parseNode(node *tree_sitter.Node, source []byte, sourcePath string, program []route) ([]route, error) {
+func parseNode(node *tree_sitter.Node, source []byte, sourcePath string, program []Route) ([]Route, error) {
 	switch node.GrammarName() {
 	case "import":
 		start, end := node.NamedChild(0).ByteRange()
@@ -97,7 +97,7 @@ func parseNode(node *tree_sitter.Node, source []byte, sourcePath string, program
 			routeHeaders = headers.(map[string]string)
 		}
 
-		route := route{
+		route := Route{
 			Path:    routePath,
 			Method:  routeMethod,
 			Status:  status,
