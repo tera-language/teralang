@@ -3,9 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
+	"os"
 
 	"github.com/tera-language/teralang/internal/logger"
 	"github.com/tera-language/teralang/internal/parser"
+	"github.com/tera-language/teralang/internal/server"
 )
 
 func main() {
@@ -36,4 +39,12 @@ OPTIONS:
 		os.Exit(1)
 	}
 	logger.Successln("Parsing done!")
+
+	mux := server.Server(program)
+	logger.Successln("Server started at http://localhost:3000")
+	err = http.ListenAndServe(":3000", mux)
+	if err != nil {
+		logger.Errorln(err)
+		os.Exit(1)
+	}
 }
