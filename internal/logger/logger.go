@@ -74,7 +74,3 @@ func Infof(format string, msg ...any) {
 func Infoln(msg ...any) {
 	logln("\u001b[38;2;91;199;245m", msg...)
 }
-
-func Log(msg ...any) {
-
-}
