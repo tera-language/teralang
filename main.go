@@ -31,7 +31,7 @@ OPTIONS:
 	entrypoint := flag.Arg(0)
 	program, err := parser.Parse(entrypoint)
 	if err != nil {
-		logger.Error(err)
+		logger.Errorln(err)
 	}
-	fmt.Printf("%#v\n", program)
+	logger.Successf("%#v\n", program)
 }
