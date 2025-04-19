@@ -7,7 +7,9 @@ import (
 
 func log(color string, a ...any) {
 	fmt.Fprint(os.Stderr, "\u001b[38;2;30;144;255m[Tera] ", color)
-	fmt.Fprint(os.Stderr, a...)
+	for _, el := range a {
+		fmt.Fprintf(os.Stderr, "%v ", el)
+	}
 	fmt.Fprint(os.Stderr, "\u001b[0m")
 }
 
@@ -19,7 +21,9 @@ func logf(format string, color string, a ...any) {
 
 func logln(color string, a ...any) {
 	fmt.Fprint(os.Stderr, "\u001b[38;2;30;144;255m[Tera] ", color)
-	fmt.Fprint(os.Stderr, a...)
+	for _, el := range a {
+		fmt.Fprintf(os.Stderr, "%v ", el)
+	}
 	fmt.Fprintln(os.Stderr, "\u001b[0m")
 }
 
