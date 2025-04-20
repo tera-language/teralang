@@ -3,6 +3,7 @@ package parser
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"path"
 	"slices"
@@ -72,16 +73,22 @@ func parseNode(node *tree_sitter.Node, source []byte, sourcePath string, program
 		if err != nil {
 			return nil, err
 		}
-
-		var status int64 = 200
-		if stat, ok := routeProps["status"]; ok {
-			status, err = strconv.ParseInt(stat.(string), 10, 64)
-			if err != nil {
-				return nil, err
+		keys := maps.Keys(routeProps)
+		for key := range keys {
+			if !slices.Contains([]string{"status", "headers", "json", "html", "text"}, key) {
+				return nil, fmt.Errorf("Invalid key in route definition: \"%s\"", key)
 			}
 		}
 
-		routeHeaders := map[string]string{}
+		status := 200
+		if stat, ok := routeProps["status"]; ok {
+			status, ok = stat.(int)
+			if !ok {
+				return nil, fmt.Errorf("Error on line %d: \"%v\" should be an integer", node.StartPosition().Row+1, stat)
+			}
+		}
+
+		routeHeaders := map[string]any{}
 		routeBody := ""
 
 		if html, ok := routeProps["html"]; ok {
@@ -89,18 +96,19 @@ func parseNode(node *tree_sitter.Node, source []byte, sourcePath string, program
 			routeBody = html.(string)
 		} else if jsonVal, ok := routeProps["json"]; ok {
 			routeHeaders["Content-Type"] = "application/json"
-			jsonStr, err := json.Marshal(jsonVal.(map[string]any))
+			jsonMap := jsonVal.(map[string]any)
+			jsonStr, err := json.Marshal(jsonMap)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("Error on line %d: %s", node.StartPosition().Row+1, err)
 			}
 			routeBody = string(jsonStr)
 		} else if body, ok := routeProps["text"]; ok {
 			routeHeaders["Content-Type"] = "text/plain"
-			routeBody = body.(string)
+			routeBody, ok = body.(string)
 		}
 
 		if headers, ok := routeProps["headers"]; ok {
-			routeHeaders = headers.(map[string]string)
+			routeHeaders = headers.(map[string]any)
 		}
 
 		route := Route{
@@ -129,13 +137,21 @@ func parseNode(node *tree_sitter.Node, source []byte, sourcePath string, program
 func parseStruct(node *tree_sitter.Node, source []byte) (map[string]any, error) {
 	keys := []string{}
 	values := []any{}
+	startPos := []uint{}
 
 	cursor := node.Walk()
 	for _, child := range node.NamedChildren(cursor) {
 		switch child.GrammarName() {
 		case "key":
-			start, end := child.ByteRange()
-			keys = append(keys, string(source[start:end]))
+			if child.NamedChildCount() == 1 {
+				child = *child.NamedChild(0)
+				start, end := child.ByteRange()
+				keys = append(keys, string(source[start+1:end-1]))
+			} else {
+				start, end := child.ByteRange()
+				keys = append(keys, string(source[start:end]))
+			}
+			startPos = append(startPos, child.StartPosition().Row+1)
 		case "value":
 			valueType := child.NamedChild(0).GrammarName()
 			switch valueType {
@@ -148,6 +164,30 @@ func parseStruct(node *tree_sitter.Node, source []byte) (map[string]any, error) 
 			case "string":
 				start, end := child.NamedChild(0).ByteRange()
 				values = append(values, string(source[start+1:end-1]))
+			case "int":
+				start, end := child.NamedChild(0).ByteRange()
+				srcStr := string(source[start:end])
+				intVal, err := strconv.ParseInt(srcStr, 10, 64)
+				if err != nil {
+					return nil, fmt.Errorf("Error on line %d: %v", child.StartPosition().Row, err)
+				}
+				values = append(values, int(intVal))
+			case "float":
+				start, end := child.NamedChild(0).ByteRange()
+				srcStr := string(source[start:end])
+				floatVal, err := strconv.ParseFloat(srcStr, 64)
+				if err != nil {
+					return nil, fmt.Errorf("Error on line %d: %v", child.StartPosition().Row, err)
+				}
+				values = append(values, floatVal)
+			case "bool":
+				start, end := child.NamedChild(0).ByteRange()
+				srcStr := string(source[start:end])
+				boolVal := false
+				if srcStr == "true" {
+					boolVal = true
+				}
+				values = append(values, boolVal)
 			default:
 				start, end := child.NamedChild(0).ByteRange()
 				values = append(values, string(source[start:end]))
@@ -161,6 +201,21 @@ func parseStruct(node *tree_sitter.Node, source []byte) (map[string]any, error) 
 
 	props := map[string]any{}
 	for i := range keys {
+		switch keys[i] {
+		case "headers":
+			if _, ok := values[i].(map[string]any); !ok {
+				return nil, fmt.Errorf("Error on line %d: \"headers\" should be a struct", startPos[i])
+			}
+		case "json":
+			if _, ok := values[i].(map[string]any); !ok {
+				return nil, fmt.Errorf("Error on line %d: \"json\" should be a struct", startPos[i])
+			}
+		case "text":
+			if _, ok := values[i].(string); !ok {
+				return nil, fmt.Errorf("Error on line %d: \"text\" should be a string", startPos[i])
+			}
+		}
+
 		props[keys[i]] = values[i]
 	}
 

@@ -6,3 +6,15 @@ route "/ping" GET: {
     message: "pong"
   }
 }
+
+route "/" GET: {
+    json: {
+        "json-key": "json-value"
+        num: 7
+        float: 3.13
+        isBool: true
+        nested: {
+            struct: true
+        }
+    }
+}

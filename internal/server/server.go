@@ -15,7 +15,11 @@ func Server(routes []parser.Route) *http.ServeMux {
 				logger.Infoln(route.Path, route.Method, route.Status)
 				w.WriteHeader(route.Status)
 				for k, v := range route.Headers {
-					w.Header().Set(k, v)
+					val, ok := v.(string)
+					if !ok {
+						logger.Errorf("Error parsing string from value: \"%v\"", v)
+					}
+					w.Header().Set(k, val)
 				}
 				_, err := w.Write([]byte(route.Body))
 				if err != nil {
