@@ -1,0 +1,44 @@
+on: push
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.goos }}-${{ matrix.goarch }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build
+        shell: bash
+      - run: mv teralang teralang-${{ github.ref_name }}-${{ matrix.goos }}-${{ matrix.goarch }}
+        if: ${{ matrix.os != 'windows-latest' }}
+      - run: mv teralang.exe teralang-${{ github.ref_name }}-${{ matrix.goos }}-${{ matrix.goarch }}.exe
+        shell: bash
+        if: ${{ matrix.os == 'windows-latest' }}
+      - uses: actions/upload-artifact@v4
+        if: ${{ matrix.os != 'windows-latest' }}
+        with:
+          name: teralang-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: teralang-${{ github.ref_name }}-${{ matrix.goos }}-${{ matrix.goarch }}
+      - uses: actions/upload-artifact@v4
+        if: ${{ matrix.os == 'windows-latest' }}
+        with:
+          name: teralang-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: teralang-${{ github.ref_name }}-${{ matrix.goos }}-${{ matrix.goarch }}.exe
