@@ -54,7 +54,7 @@ func parseNode(node *tree_sitter.Node, source []byte, sourcePath string, program
 		importPath := string(source[start+1 : end-1]) // skip "" characters
 		relativePath := path.Join(path.Dir(sourcePath), importPath)
 		if slices.Contains(parsedPaths, relativePath) {
-			logger.Warning("Already parsed: ", relativePath)
+			logger.Warningln("Already parsed:", relativePath)
 			break
 		}
 		importedProgram, err := Parse(relativePath)
